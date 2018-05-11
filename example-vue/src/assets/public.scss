@@ -1,0 +1,62 @@
+@function px2rem640 ($px) {
+    @return ($px / 64) * 1rem
+}
+  
+@mixin px2rem ($property, $px-values, $baseline-px:16px) {
+    $baseline-rem: $baseline-px / 1rem * 1;
+    @if type-of($px-values)=="number" {}
+    @else {
+        $rem-values: ();
+        @each $value in $px-values {
+        @if $value==0 or type-of($value) !="number" {
+            $rem-values: append($rem-values, $value / $baseline-rem);
+        }
+        }
+    }
+}
+  
+@mixin onelinebox($height){
+    height:$height;
+    line-height:$height;
+}
+
+@function px64 ($px) {
+    @return ($px / 64) * 1rem
+}
+
+@function px375 ($px) {
+    @return ($px / 37.5) * 1rem
+}
+
+/*单个属性*/
+.fullbg{background-size:100% 100%;}
+.bbox{box-sizing:border-box;}
+
+/*一组属性*/
+.panel{
+    width:100%;
+    background-color:#fff;
+    @extend .bbox;
+    border-radius:px64(20);
+    position:relative;
+    box-shadow:0px 0px 5px rgba(0,0,0,0.2);
+}
+.pseudoIcon{
+    content:'';
+    display:inline-block;
+    background-size:100% 100%;
+}
+.btn{
+    height:px64(69);
+    line-height:px64(69);
+    border-radius:px64(46);
+    text-align:center;
+    cursor:pointer;
+    color:#fff;
+    background:#ff3545;
+    background: -webkit-linear-gradient(left, #fe7735 0%,#ff3545 100%);
+    background: linear-gradient(to right, #fe7735 0%,#ff3545 100%);
+    &.unable{
+        opacity:0.5;
+    }
+}
