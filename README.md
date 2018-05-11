@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-# easyauido
-一个简单易用的音频模块（施工中，请看develop分支）
-=======
 # 正在开发中的
 你目前看到的版本并不完善，提供了基本的demo，但是还是值得参考的<br>
 有关webaudio的问题，可以联系作者，他愿意和你一起探讨(894416038@qq.com)
@@ -35,4 +31,3 @@ import { EasyPlayer as Player } from './easyaudio/easyaudio.core.js';
 Player.singlePlay(url);
 ```
 更多的内容，写在了demo的注释中，后面会陆续搬运到README中
->>>>>>> develop
