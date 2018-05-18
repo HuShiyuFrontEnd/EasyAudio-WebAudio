@@ -1,12 +1,14 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Home from '@/components/Home'
+import Home from '@/home/Home'
 
 const demolist = () => import('@/easyaudio/playlist')
 const demolongtest = () => import('@/easyaudio/longtest')
 const demoquickstart = () => import('@/easyaudio/quickstart')
 const demosetparam = () => import('@/easyaudio/setparam')
 const demomessage = () => import('@/easyaudio/message')
+const demofilter = () => import('@/easyaudio/filter')
+const demopanner = () => import('@/easyaudio/panner')
 
 Vue.use(Router)
 
@@ -37,6 +39,16 @@ export default new Router({
       path: '/demo/longtest',
       name: 'DemoLongTest',
       component: demolongtest
+    },
+    {
+      path: '/demo/filter',
+      name: 'DemoFilter',
+      component: demofilter
+    },
+    {
+      path: '/demo/panner',
+      name: 'DemoPanner',
+      component: demopanner
     },
     {
       path: '/demo/playlist',

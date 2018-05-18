@@ -8,8 +8,9 @@
 </template>
 
 <script>
-import { EasyPlayer as Player ,EasySubscriber as Message, EasyUtil as Util } from './easyaudio/easyaudio.core.js';
-window.Player = Player;
+import { EasyPlayer as EasyPlayer ,EasySubscriber as Message, EasyUtil as Util } from './easyaudio/easyaudio.core.js';
+// window.Player = Player;
+let Player;
 
 export default {
     name: 'LongTest',
@@ -28,7 +29,8 @@ export default {
             this.active = true;
         }
     },
-    created(){
+    mounted(){
+        Player = new EasyPlayer();
         //这里通过修改engine，在解决一些问题上会有些许的不同，默认的为webaudio，可选值还有audio/video
         //webaudio 支持各种功能，播放上对格式的支持可能也是最为全面的，但是，webaudio有两个问题：
         //1.webaudio的使用是基于XHR的读取后进行解码，要求XHR的读取格式（responsetype)为arraybuffer，而这个格式是不支持流的，所以在未来解决这个问题之前，webaudio做不到缓冲播放，对于较长的音频文件（几十M的），会有毁灭性的体验，，除非你们使用websocket推送流，否则长音频不推荐webaudio
@@ -47,7 +49,8 @@ export default {
     },
     //vue单页离开后，并不会自动销毁Player，请将Player暂停
     beforeDestroy(){
-        Player.stop();
+        Player.clear();
+        Player = null;
     },
 }
 </script>

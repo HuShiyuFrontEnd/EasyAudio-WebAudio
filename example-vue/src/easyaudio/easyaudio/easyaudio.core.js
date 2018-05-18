@@ -3,10 +3,11 @@ const DEFAULT_TRANSITION={
     type:'default',
     time:0,
 },
-ANALYSER_INDEX=0,
-FILTER_INDEX=1,
-PROGRESS_INDEX=2,
-GAIN_INDEX=3;
+ANALYSER_INDEX=4,
+FILTER_INDEX=0,
+PROGRESS_INDEX=1,
+GAIN_INDEX=2,
+PANNER_INDEX=3;
 //工具函数
 //函数异步处理
 function Thenfail(func){
@@ -52,7 +53,7 @@ let AudioUtil = {
     thenfail:Thenfail
 };
 //订阅发布数据模型
-let Subscriber = (function(){
+window.EasySubscriber = (function(){
     let list = {},
         onceList = {},
         history = {},
@@ -170,6 +171,13 @@ let Subscriber = (function(){
         //清空name下所有记录，
         clear(name){
             history[name]=[];
+        },
+        refreshAll(){
+            list = {},
+            onceList = {},
+            history = {},
+            count = 0,
+            index = {};
         }
     }
 })();
@@ -182,7 +190,7 @@ function Player(options){
     this._engine='webaudio';//webaudio|audio(强行降级为h5 audio)|video(使用video解码)
     if(!window.AudioContext){
         console.log('你的浏览器没有对WebAudio API的支持!');
-        this._engineForce='audio';
+        this._engine='audio';
         //如果有，这个地方可以加一个预警接口，向接口中返回无法调取webaudio的手机的UA信息，从而从用户端做出调整
         //兼容性记录，IOS中，似乎缺少对detune的支持，所以后面都直接使用的playbackrate
         return false;
@@ -194,12 +202,13 @@ function Player(options){
     this._source=null;//音源
     this._analyser=null;//分析节点，音频可视化
     this._filter=null;//滤波器，
+    this._panner=null;
     this._progressScript=null;//在信号处理的能力到达一定水平以后，你可以尝试扩展一下，加入这个节点，理论上讲，在不考虑性能问题下，你可以用这个节点做到一般的音频编辑软件的很多功能，降噪、调频等等，，，但是需要好的算法提供支持
     this._gain=this._ctx.createGain();//音量调节
     this._destination=this._ctx.destination;//输出，扬声器
     //linklist中没有source，因为sourceNode会经常更换，每次建立连接后，头节点会赋给_chainHead,当你的sourceNode频繁变动时，你并不需要
     //每次都重建连接，将旧的sourceNode解除连接，用新的souceNode连接即可
-    this._linklist=[this._analyser,this._filter,this._progressScript,this._gain,this._destination];
+    this._linklist=[this._filter,this._progressScript,this._gain,this._panner,this._analyser,this._destination];
     this._chainHead=null;//链接头，用于给音源用于链接，如果以后出现了非单线链接的逻辑，这里的架构需要调整
     //播放list管理
     this._history={
@@ -233,7 +242,7 @@ function Player(options){
         }
     }
     //打开历史，即使先publish，后注册，也可以被接收到
-    Subscriber.register('setting',this.setAudioParamValue.bind(this),true);
+    EasySubscriber.register('setting',this.setAudioParamValue.bind(this),true);
     //快速使用通道
     this._total=0;
     this._volume=1;
@@ -251,7 +260,7 @@ function Player(options){
             },
             set:(val) => {
                 this._volume=val;
-                Subscriber.cover('setting','volume',valueInRange(val,this._audioParamConfig.volume.min,this._audioParamConfig.volume.max));
+                EasySubscriber.cover('setting','volume',valueInRange(val,this._audioParamConfig.volume.min,this._audioParamConfig.volume.max));
             }
         },
         'speed':{
@@ -260,7 +269,7 @@ function Player(options){
             },
             set:(val) => {
                 this._speed=val;
-                Subscriber.cover('setting','speed',valueInRange(val,this._audioParamConfig.speed.min,this._audioParamConfig.speed.max));
+                EasySubscriber.cover('setting','speed',valueInRange(val,this._audioParamConfig.speed.min,this._audioParamConfig.speed.max));
             }
         },
         'total':{
@@ -268,7 +277,7 @@ function Player(options){
                 return this._total;
             },
             set:(val) => {
-                Subscriber.cover('duration',val);
+                EasySubscriber.cover('duration',val);
                 this._total=val;
             }
         },
@@ -302,20 +311,20 @@ function Player(options){
     this._progress=0;
     this._showProgress=0;
     this._countstart=0;
-    // Subscriber.register('countchange',() => {
+    // EasySubscriber.register('countchange',() => {
         
     // });
-    setInterval(() => {
+    this._progressInterval=setInterval(() => {
         if(!this._source)
             return false;
         if(this._engine=='webaudio'){
             if(this._status!='play')
                 return false;
             this._showProgress-= (-0.5*this.speed);
-            Subscriber.cover('progress',this._showProgress,this.total);
+            EasySubscriber.cover('progress',this._showProgress,this.total);
         }else{
             this._showProgress=this._source.mediaElement.currentTime;
-            Subscriber.cover('progress',this._showProgress,this.total);
+            EasySubscriber.cover('progress',this._showProgress,this.total);
         }
     },500);
     //参数设置
@@ -328,9 +337,9 @@ function Player(options){
         else{
             this.addList(options);
             // if(options.onstarted)
-            //     Subscriber.register('started',options.onstarted);
+            //     EasySubscriber.register('started',options.onstarted);
             // if(options.onended)
-            //     Subscriber.register('ended',options.onended);
+            //     EasySubscriber.register('ended',options.onended);
         }
     }
     //第一种初始化方法，参数空或者其他，这种更依赖prototype里的方法来处理音频
@@ -351,7 +360,7 @@ Player.prototype.choose = function(index,notplay){
     if(this._engine=='webaudio'){
         if(this._source && this._status == 'play')
             this.stop();
-        Subscriber.once('loaded'+index,() => {
+        EasySubscriber.once('loaded'+index,() => {
             this.createSource(this._bufferList[index]);
             if(!notplay)
                 this.play();
@@ -375,10 +384,10 @@ Player.prototype.choose = function(index,notplay){
             
             mediaElement.ondurationchange=() =>{
                 this.total=mediaElement.duration;
-                Subscriber.cover('srcloaded',mediaElement.duration);
+                EasySubscriber.cover('srcloaded',mediaElement.duration);
             }
             mediaElement.onended=() => {
-                Subscriber.cover('srcended',mediaElement);
+                EasySubscriber.cover('srcended',mediaElement);
                 switch(this._strategy){
                     case 'ONE_CIRCLE':
                         this.choose(this._audiolist.current);
@@ -413,18 +422,18 @@ Player.prototype.choose = function(index,notplay){
             this._source.mediaElement.play();
         else this._source.mediaElement.pause();
     }
-    Subscriber.cover('choose',index);
+    EasySubscriber.cover('choose',index);
 }
 //播放
 //delay，多少秒后开始播放，offset，开始播放位置位于音乐多少秒以后，total，一共要播放多长时间
 //不过好像很少用参数。。。
 Player.prototype.play = function(delay,offset){
     if(!this._source){
-        Subscriber.cover('loading');
+        EasySubscriber.cover('loading');
         return false
     }
     if(this._status!='progress')
-        Subscriber.cover('started');
+        EasySubscriber.cover('started');
     if(this._engine=='webaudio')
         this._source.onended=() => {
             // console.log('ended',this._status)
@@ -433,7 +442,7 @@ Player.prototype.play = function(delay,offset){
                 this.createSource(this._bufferList[this._audiolist.current]);
                 this.play(0,this._showProgress);
             }else{
-                Subscriber.cover('ended');
+                EasySubscriber.cover('ended');
                 this.stop();
                 switch(this._strategy){
                     case 'ONE_CIRCLE':
@@ -500,7 +509,7 @@ Player.prototype.resume = function(){
 }
 //停止播放后的逻辑
 Player.prototype.stop = function(replay){
-    if(!this._source)
+    if(!this._source||this._status=='stop')
         return false;
     if(this._engine=='webaudio'){
         this._source.disconnect(this._chainHead);
@@ -530,6 +539,8 @@ Player.prototype.configAudioParam = function(options){
 }
 //改变播放参数
 Player.prototype.setAudioParamValue = function(name,value){
+    if(!this._source)
+        return false;
     let setting = this._audioParamConfig[name].transition;
     let audioparam = this.getAudioParam(name);
     if(name == 'speed'){
@@ -603,12 +614,13 @@ Player.prototype.recreateLink = function(disconnect){
     // console.log('linklist:',this._linklist);
     this._chainHead = first;
     // console.log(disconnect?'disconnect':'connect',show.join('---'));
+    // console.log('chainhead',first)
 }
 //根据输入值的情况可能异步
 Player.prototype.createSource = function(buffer){
     if(this._engine != 'webaudio')
         return false;
-    Subscriber.cover('progress',0,buffer.duration);
+    EasySubscriber.cover('progress',0,buffer.duration);
     this._source = this._ctx.createBufferSource();
     this._source.buffer=buffer;
     // this.speed=this.speed||1;//播放速度
@@ -616,6 +628,7 @@ Player.prototype.createSource = function(buffer){
     // this.analysisAudioInfo(buffer);
     if(this._chainHead)
         this._source.connect(this._chainHead);
+    EasySubscriber.cover('sourcecreate',buffer.duration);
 }
 //加载
 Player.prototype.load = function(index){
@@ -631,10 +644,10 @@ Player.prototype.load = function(index){
         if(request.readyState==4&&request.status==200){
             if(request.response.numberOfChannels){
                 this._bufferList[index]=request.response;
-                Subscriber.cover('loaded'+index);
+                EasySubscriber.cover('loaded'+index);
             }else this._ctx.decodeAudioData(request.response,(decodebuffer => {
                 this._bufferList[index]=decodebuffer;
-                Subscriber.cover('loaded'+index);
+                EasySubscriber.cover('loaded'+index);
             }));
         }
         else reject('error:'+request.status+','+request.statusText);
@@ -701,6 +714,10 @@ Player.prototype.singlePlay = function(url){
 //extend其他的插件
 Player.prototype.extend = function(obj){
     for(let p in obj){
+        if(this[p]){
+            console.log(p + 'is in Player');
+            continue;
+        }
         this[p] = obj[p];
     }
     if(this.init){
@@ -708,7 +725,12 @@ Player.prototype.extend = function(obj){
         this.init = null;
     }
 }
+Player.prototype.clear = function(){
+    EasySubscriber.refreshAll();
+    this.stop();
+    clearInterval(this._progressInterval);
+}
 //示例
-let player = new Player();
+// let player = new Player();
 //导出模块
-export { player as EasyPlayer , Subscriber as EasySubscriber , AudioUtil as EasyUtil}
+export { Player as EasyPlayer ,EasySubscriber as EasySubscriber , AudioUtil as EasyUtil}

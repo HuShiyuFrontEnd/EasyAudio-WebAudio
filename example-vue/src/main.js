@@ -3,8 +3,12 @@
 import Vue from 'vue'
 import App from './App'
 import router from './router'
+import Element from 'element-ui' ;
+import "./assets/element-index.css";
 
-Vue.config.productionTip = false
+Vue.use(Element);
+
+Vue.config.productionTip = false;
 
 /* eslint-disable no-new */
 const app = new Vue({

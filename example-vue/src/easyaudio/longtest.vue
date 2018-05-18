@@ -9,8 +9,9 @@
 </template>
 
 <script>
-import { EasyPlayer as Player ,EasySubscriber as Message, EasyUtil as Util } from './easyaudio/easyaudio.core.js';
-window.Player = Player;
+import { EasyPlayer as EasyPlayer ,EasySubscriber as Message, EasyUtil as Util } from './easyaudio/easyaudio.core.js';
+// window.Player = Player;
+let Player;
 
 export default {
     name: 'LongTest',
@@ -41,7 +42,9 @@ export default {
             }
         }
     },
-    created(){
+    mounted(){
+        Player = new EasyPlayer();
+        console.log(Player)
         let ua=window.navigator.userAgent;
         let is_ios=/iphone|ipod|ipad/ig.test(ua);
         if(is_ios)
@@ -54,7 +57,8 @@ export default {
         })
     },
     beforeDestroy(){
-        Player.stop();
+        Player.clear();
+        Player = null;
     },
 }
 </script>
