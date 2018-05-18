@@ -8,9 +8,9 @@
 </template>
 
 <script>
-import { EasyPlayer as Player ,EasySubscriber as Message, EasyUtil as Util } from './easyaudio/easyaudio.core.js';
-window.Player = Player;
-window.Message = Message;
+import { EasyPlayer as EasyPlayer ,EasySubscriber as Message, EasyUtil as Util } from './easyaudio/easyaudio.core.js';
+// window.Message = Message;
+let Player;
 
 export default {
     name: 'LongTest',
@@ -27,7 +27,8 @@ export default {
             this.active = true;
         },
     },
-    created(){
+    mounted(){
+        Player = new EasyPlayer();
         Player._strategy = 'ONE_CIRCLE';//音频的播放策略，目前支持的值有:ONE_PLAY 单曲播放 ONE_CIRCLE 
 
         console.log('--------register&publish-------')
@@ -95,6 +96,7 @@ export default {
         cover    choose    index                     选择了索引为index的音频
         cover    loading   无                        调用play播放时，音频节点尚未准备好（未加载完）
         cover    started   无                        音频开始播放
+        cover    sourcecreate total                source节点建立，推荐作为后续逻辑开始的触发
         */
         //目前，开发者只对自己需要的事件做出了处理，如果有需要，可以自行添加
         //如果需要帮助，可以联系作者（894416038@qq.com)
@@ -105,7 +107,8 @@ export default {
         });
     },
     beforeDestroy(){
-        Player.stop();
+        Player.clear();
+        Player = null;
     },
 }
 </script>

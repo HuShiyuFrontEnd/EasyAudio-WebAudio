@@ -1,11 +1,14 @@
 //webaudio mode only
-const ANALYSER_INDEX=0,
-FILTER_INDEX=1,
-PROGRESS_INDEX=2,
-GAIN_INDEX=3;
+const ANALYSER_INDEX=4,
+FILTER_INDEX=2,
+PROGRESS_INDEX=1,
+GAIN_INDEX=0,
+PANNER_INDEX=3;
 
 let extend={
     _analyserActive:false,
+    _filterActive:false,
+    _pannerActive:false,
     _lastTime:0,
     init(){
         this.raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(callback, element) {
@@ -31,12 +34,11 @@ let extend={
         // }
         function unable(node,index){
             return function(){
-                this._source.disconnect(this._chainHead);
+                this.stop();
                 this.recreateLink(true);
                 node = null;
                 this._linklist[index] = null;
                 this.recreateLink();
-                this._source.connect(this._chainHead);
             }
         }
         let returnnode;
@@ -53,7 +55,6 @@ let extend={
                     this._filter.type = type;
                     this._filter.frequency.value = value;
                 });
-                this._filter.set
                 returnnode = this._filter;
             };break;
             case 'analyser':{
@@ -62,11 +63,63 @@ let extend={
                 this._analyser.unable = unable(this._analyser, ANALYSER_INDEX).bind(this);
                 returnnode = this._analyser;
             };break;
+            //暂时不好写出来
             case 'progress':{
                 this._progressScript = this._ctx.createScriptProcessor(4096, 1, 1);
                 this._linklist[PROGRESS_INDEX] = this._progressScript;
                 this._progressScript.unable = unable(this._progressScript,PROGRESS_INDEX).bind(this);
                 returnnode = this._progressScript;
+            };break;
+            case 'panner':{
+                this._panner = this._ctx.createPanner();
+                this._panner.panningModel = 'HRTF';
+                this._panner.distanceModel = 'inverse';
+                this._panner.refDistance = 1;
+                this._panner.maxDistance = 10000;
+                this._panner.rolloffFactor = 1;
+                this._panner.coneInnerAngle = 360;
+                this._panner.coneOuterAngle = 0;
+                this._panner.coneOuterGain = 0;
+                if(this._panner.orientationX) {
+                    this._panner.orientationX.setValueAtTime(1, this.current);
+                    this._panner.orientationY.setValueAtTime(0, this.current);
+                    this._panner.orientationZ.setValueAtTime(0, this.current);
+                }else{
+                    this._panner.setOrientation(1,0,0);
+                }
+
+                let listener = this._ctx.listener;
+                if(listener.forwardX) {
+                    listener.forwardX.setValueAtTime(0, this.current);
+                    listener.forwardY.setValueAtTime(0, this.current);
+                    listener.forwardZ.setValueAtTime(-1, this.current);
+                    listener.upX.setValueAtTime(0, this.current);
+                    listener.upY.setValueAtTime(1, this.current);
+                    listener.upZ.setValueAtTime(0, this.current);
+                }else{
+                    listener.setOrientation(0,0,-1,0,1,0);
+                }
+
+                if(listener.positionX) {
+                    listener.positionX.setValueAtTime(0, this.current);
+                    listener.positionY.setValueAtTime(0, this.current);
+                    listener.positionZ.setValueAtTime(0, this.current);
+                }else{
+                    listener.setPosition(0, 0, 0);
+                }
+
+                this._linklist[PANNER_INDEX] = this._panner;
+                this._panner.unable = unable(this._panner, PANNER_INDEX).bind(this);
+                this._panner.setPosition = ([x, y, z]) => {
+                    if(this._panner.positionX) {
+                        this._panner.positionX.setValueAtTime(x, this.current);
+                        this._panner.positionY.setValueAtTime(y, this.current);
+                        this._panner.positionZ.setValueAtTime(z, this.current);
+                    } else {
+                        this._panner.setPosition(xPos,yPos,zPos);
+                    }
+                }
+                returnnode = this._panner;
             };break;
         }
         if(this._chainHead){
@@ -109,12 +162,32 @@ let extend={
         }
     },
     activateAnalyser(func){
-        this.activateNode('analyser');
-        this._analyserActive = true;
+        let analyser = this.activateNode('analyser');
+        this._analyserActive = analyser;
         this._lastTime = Date.now();
         this.userBehavior = func;
         this.update();
+        return analyser;
     },
-    
+    activateFilter(){
+        let filter = this.activateNode('filter');
+        this._filterActive = filter;
+        return filter;
+    },
+    activePanner(){
+        let panner = this.activateNode('panner');
+        this._pannerActive = panner;
+        return panner;
+    },
+    clearAnalyser(){
+        let list = ['_analyserActive', '_filterActive', '_pannerActive'];
+        for(let i = 0;i<list.length;i++){
+            if(this[list[i]]){
+                console.log(list[i])
+                this[list[i]].unable();
+            }
+            this[list[i]] = false;
+        }
+    }
 }
 export { extend as AnalyserExtension }

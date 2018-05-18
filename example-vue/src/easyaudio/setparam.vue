@@ -14,8 +14,8 @@
 </template>
 
 <script>
-import { EasyPlayer as Player ,EasySubscriber as Message, EasyUtil as Util } from './easyaudio/easyaudio.core.js';
-window.Player = Player;
+import { EasyPlayer as EasyPlayer ,EasySubscriber as Message, EasyUtil as Util } from './easyaudio/easyaudio.core.js';
+let Player;
 
 export default {
     name: 'LongTest',
@@ -31,8 +31,6 @@ export default {
     },
     methods: {
         play(type){
-            Player.singlePlay("/static/祖娅纳惜 - 苏幕遮（Cover 张晓棠）.mp3");
-            this.active = true;
         },
         move(num){
             //Player.progress 在赋值后会被加上安全处理，使其值处于0和total之间
@@ -51,10 +49,13 @@ export default {
             Player.volume = val;
         }
     },
-    created(){
+    mounted(){
+        Player = new EasyPlayer();
         //easyaudio将一些参数进行了封装管理，最后用最简单的方式暴露了出来，包括：
         //easyaudio的Player对象下的参数，带_的一般是参数/对象，而没有的往往是方法
         //以下是推荐用户拿出来使用的
+        Player.singlePlay("/static/祖娅纳惜 - 苏幕遮（Cover 张晓棠）.mp3");
+        this.active = true;
         console.log(Player._audiolist);//查看目前的所有音频的信息
         Player._strategy = 'ONE_CIRCLE';//音频的播放策略，目前支持的值有:ONE_PLAY 单曲播放 ONE_CIRCLE 单曲循环 LIST_PLAY 顺序播放 LIST_CIRCLE 列表循环 LIST_RANDOM 随机播放
         console.log(Player.volume);
@@ -90,7 +91,8 @@ export default {
         });
     },
     beforeDestroy(){
-        Player.stop();
+        Player.clear();
+        Player = null;
     },
 }
 </script>

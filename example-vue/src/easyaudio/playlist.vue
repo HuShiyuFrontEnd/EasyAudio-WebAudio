@@ -18,16 +18,17 @@
             <div class='audio-next' @click='nextOne()'>下一首</div>
             <div class='audio-next' @click='prevOne()'>前一首</div>
         </div>
+        <a @click='$router.go(-1);'>返回</a>
     </div>
 </template>
   
 </template>
 
 <script>
-import { EasyPlayer as Player ,EasySubscriber as Message, EasyUtil as Util } from './easyaudio/easyaudio.core.js';
+import { EasyPlayer as EasyPlayer ,EasySubscriber as Message, EasyUtil as Util } from './easyaudio/easyaudio.core.js';
 import { AnalyserExtension as Analyser } from './easyaudio/extension/easeaudio.analyse.js';
-window.Player=Player;
-window.Message=Message;
+let Player;
+// window.Message = Message;
 
 export default {
     data() {
@@ -50,6 +51,7 @@ export default {
         }
     },
     mounted(){
+        Player = new EasyPlayer();
         Player._engine = 'audio';
         Player._strategy = this.strategy;
 
@@ -118,7 +120,8 @@ export default {
         })
     },
     beforeDestroy(){
-        Player.stop();
+        Player.clear();
+        Player = null;
     },
     methods:{
         refreshTime(){
