@@ -42,15 +42,17 @@ let panner;
 export default {
     data() {
         return {
-            activegrid:5
+            activegrid:7
         }
     },
     components:{
     },
     watch:{
         activegrid(val){
-            console.log([(val%3 - 1)*3 ,0 ,2 - Math.floor(val/3)])
-            panner.setPosition([(val%3 - 1)*3 ,0 ,2 - Math.floor(val/3)]);
+            if(!panner)
+                return false;
+            console.log([(1 - val%3)*3 ,0 ,2 - Math.floor(val/3)])
+            panner.setPosition([(1 - val%3)*3 ,0 ,2 - Math.floor(val/3)]);
         }
     },
     mounted(){

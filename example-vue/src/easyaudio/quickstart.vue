@@ -31,13 +31,14 @@ export default {
     },
     mounted(){
         Player = new EasyPlayer();
+        console.log(Player)
         //这里通过修改engine，在解决一些问题上会有些许的不同，默认的为webaudio，可选值还有audio/video
         //webaudio 支持各种功能，播放上对格式的支持可能也是最为全面的，但是，webaudio有两个问题：
         //1.webaudio的使用是基于XHR的读取后进行解码，要求XHR的读取格式（responsetype)为arraybuffer，而这个格式是不支持流的，所以在未来解决这个问题之前，webaudio做不到缓冲播放，对于较长的音频文件（几十M的），会有毁灭性的体验，，除非你们使用websocket推送流，否则长音频不推荐webaudio
         //2.虽然已经是现代了，但是这个技术在某些细节上可能会在某些平台上有支持问题，（极少），如遇碰到，请联系作者（894416038@qq.com)
         //audio 最常见的最简单最稳定的方案，但是，也会有一些问题，例如AAC格式、M4A格式在某些浏览器上无法缓冲播放的问题（例如安卓的QQ浏览器）
         //video 这个谜一样的解决方案，其实仔细一想完全是在理的，video的解码，音画相对是独立的，而声音部分则类似于audio，但是由于视频常用的音频格式和audio不太相同（猜测的），AAC、M4A格式的音频在那些无法缓冲播放的安卓浏览器上，可以正常的缓冲播放。但是这个方案需要注意的是，IOS上video必须在屏幕中呈现（如果你隐藏到屏幕外，开始后强制全屏，如果你想缩小或者遮挡，则会被隐藏或层级置顶，总之IOS中不要使用video方案）
-        Player._engine = 'audio';
+        // Player._engine = 'audio';
         //easyaudio内实现了一个 发布/订阅模式 的消息管理，这里是简单的注册了一个progress的接收器，
         //每0.5s，easyaudio内部都会推送给你最新的 current/total 值，分别对应了当前歌曲的当前时间和总时长
         //Util提供了几个简单的小工具，希望可以帮到你，这里的parseTime会将一个时间数字，变成一个00:00格式的时间字符串。
