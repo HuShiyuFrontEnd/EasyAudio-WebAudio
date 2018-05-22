@@ -179,6 +179,50 @@ let extend={
         this._pannerActive = panner;
         return panner;
     },
+    //根据已读取的buffer中的某一个，制作一个长度为partNum的list，里面的每一个值都是0.1到1的值，用于绘制分贝图
+    //partNum >= 1, int
+    //jumprate >= 1, int
+    analyseDecibel(index, partNum, jumprate){
+        let returnList = [];
+        let view = new DataView(Player._bufferList[index].getChannelData(0).buffer);
+        return this.divideDataInto(view, partNum, jumprate||3);
+    },
+    //buffer里的原始数据的长度，可以看到：length = samplerate * duration;原始数据为32位有符号浮点数
+    //转化成dataview后，应该用同样的取32位的浮点数来计算。
+    //某种意义上，我这里并没有计算出真正合理的分贝数，而是简单的依据分成多少块粗暴的进行轮询，
+    //但是就我个人认为，提出这个需求的需求方，恐怕也没有真正考虑图像的合理性。
+    //正确的做法应该是按照一个音频文件格式的一帧的字节规则，去计算每一帧的振幅来作图，这里就不做实现了（因为不会）
+    //另外，为了提升渣机的计算性能，这里还采取了隔段取样的做法。
+    divideDataInto(data, num, jumprate){
+        //为了提升性能，我们尝试隔段采样
+        let time = Date.now();
+        //我们认为只有双声道
+        let returnData = [];
+        let byteLength = data.byteLength / 4 << 0;
+        let length = byteLength / num / jumprate << 0;
+        let value = 0.0;
+        let min;
+        let max;
+        for(let i = 0, j = 0;i < byteLength;i++,j++){
+            if(j == length){
+                if(!min) min = value;
+                else if(value < min) min = value;
+                if(!max) max = value;
+                else if(value > max) max = value;
+                returnData.push(value);
+                value = 0.0;
+                j = 0;
+                i -= length * (1 - jumprate);
+            }
+            let floati = data.getFloat32(i);
+            if(!floati && floati !== 0)floati = 0;
+            value -= -floati;
+        }
+        returnData = returnData.map((value) => (value - min)/(max - min));
+        // console.log(returnData)
+        console.log('计算花销（ms）',Date.now()-time);
+        return returnData;
+    },
     clearAnalyser(){
         let list = ['_analyserActive', '_filterActive', '_pannerActive'];
         for(let i = 0;i<list.length;i++){

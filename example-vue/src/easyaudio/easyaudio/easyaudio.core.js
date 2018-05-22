@@ -707,9 +707,11 @@ Player.prototype.switchPrev = function(){
 }
 //简易用法,播放请自行触发
 Player.prototype.singlePlay = function(url){
-    this.choose(this.addList({
+    let index = this.addList({
         url:url
-    }));
+    })
+    this.choose(index);
+    return index;
 }
 //extend其他的插件
 Player.prototype.extend = function(obj){
