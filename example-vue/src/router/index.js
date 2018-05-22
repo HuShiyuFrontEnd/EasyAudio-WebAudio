@@ -7,6 +7,7 @@ const demolongtest = () => import('@/easyaudio/longtest')
 const demoquickstart = () => import('@/easyaudio/quickstart')
 const demosetparam = () => import('@/easyaudio/setparam')
 const demomessage = () => import('@/easyaudio/message')
+const demodecibel = () => import('@/easyaudio/decibel')
 const demofilter = () => import('@/easyaudio/filter')
 const demopanner = () => import('@/easyaudio/panner')
 
@@ -34,6 +35,11 @@ export default new Router({
       path: '/demo/message',
       name: 'DemoMessage',
       component: demomessage
+    },
+    {
+      path: '/demo/decibel',
+      name: 'DemoDecibel',
+      component: demodecibel
     },
     {
       path: '/demo/longtest',

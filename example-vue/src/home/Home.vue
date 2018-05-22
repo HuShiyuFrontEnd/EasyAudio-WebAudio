@@ -13,6 +13,9 @@
         <router-link tag="li" to="/demo/longtest" :event="['mousedown', 'touchstart']">
             <a>较长的不常见格式视频的缓冲播放</a>
         </router-link>
+        <router-link tag="li" to="/demo/decibel" :event="['mousedown', 'touchstart']">
+            <a>音频可视化（全长分贝展示）</a>
+        </router-link>
         <router-link tag="li" to="/demo/filter" :event="['mousedown', 'touchstart']">
             <a>滤波器</a>
         </router-link>
@@ -20,7 +23,7 @@
             <a>声源位置改变</a>
         </router-link>
         <router-link tag="li" to="/demo/playlist" :event="['mousedown', 'touchstart']">
-            <a>一个播放列表和音频可视化的例子</a>
+            <a>一个播放列表/音频可视化（频域）</a>
         </router-link>
     </div>
 </template>

@@ -727,6 +727,8 @@ Player.prototype.extend = function(obj){
 }
 Player.prototype.clear = function(){
     EasySubscriber.refreshAll();
+    if(this.clearAnalyser)
+        this.clearAnalyser();
     this.stop();
     clearInterval(this._progressInterval);
 }

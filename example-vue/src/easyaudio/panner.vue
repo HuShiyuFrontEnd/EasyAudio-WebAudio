@@ -99,7 +99,6 @@ export default {
     beforeDestroy(){
         //vue应用中
         Player.clear();
-        Player.clearAnalyser();
         Player = null;
     },
     methods:{

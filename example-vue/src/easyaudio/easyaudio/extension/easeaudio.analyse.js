@@ -42,7 +42,7 @@ let extend={
             }
         }
         let returnnode;
-        if(this._chainHead){
+        if(this._chainHead&&this._source){
             this._source.disconnect(this._chainHead);
             this.recreateLink(true);
         }
@@ -122,7 +122,7 @@ let extend={
                 returnnode = this._panner;
             };break;
         }
-        if(this._chainHead){
+        if(this._chainHead&&this._source){
             this.recreateLink();
             this._source.connect(this._chainHead);
         }
