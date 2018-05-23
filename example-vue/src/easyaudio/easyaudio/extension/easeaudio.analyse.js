@@ -184,7 +184,7 @@ let extend={
     //jumprate >= 1, int
     analyseDecibel(index, partNum, jumprate){
         let returnList = [];
-        let view = new DataView(Player._bufferList[index].getChannelData(0).buffer);
+        let view = new DataView(this._bufferList[index].getChannelData(0).buffer);
         return this.divideDataInto(view, partNum, jumprate||3);
     },
     //buffer里的原始数据的长度，可以看到：length = samplerate * duration;原始数据为32位有符号浮点数
